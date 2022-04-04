@@ -6,3 +6,13 @@ package com.example.tip_app.util
     } else 0.0
 
 }
+
+fun calculateTotalPerPerson(
+    totalBillState: Double,
+    splitBy: Int,
+    tipPercentage: Int
+): Double {
+    val bill = calculateTotalTip(totalBillState, tipPercentage) + totalBillState
+
+    return (bill / splitBy)
+}

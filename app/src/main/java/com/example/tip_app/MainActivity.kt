@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.tip_app.components.InputField
 import com.example.tip_app.ui.theme.Tip_AppTheme
+import com.example.tip_app.util.calculateTotalPerPerson
 import com.example.tip_app.util.calculateTotalTip
 import com.example.tip_app.widgets.RoundIconButton
 
@@ -88,15 +89,32 @@ fun TopHeader(totalPerPerson: Double = 0.0) {
 @Preview
 @Composable
 fun MainContent(){
-    BillForm(){ billAmt ->
-        Log.d("amount", "mainContent: $billAmt")
+
+    val splitByState = remember {
+        mutableStateOf(1)
     }
+
+    val tipAmountState = remember {
+        mutableStateOf(0.0)
+    }
+
+    val totalPerPersonState = remember {
+        mutableStateOf(0.0)
+    }
+    BillForm(
+        splitByState = splitByState,
+        tipAmountState = tipAmountState,
+        totalPerPersonState = totalPerPersonState)
+        {}
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BillForm(modifier:
              Modifier = Modifier,
+             splitByState: MutableState<Int>,
+             tipAmountState: MutableState<Double>,
+             totalPerPersonState: MutableState<Double>,
             onValChange: (String) -> Unit = {}
     ){
 
@@ -114,17 +132,10 @@ fun BillForm(modifier:
 
     val tipPercentage = (sliderPositionState.value * 100).toInt()
 
-    val splitByState = remember {
-        mutableStateOf(1)
-    }
-    val splitRange = Range(1, 20)
-
-    val tipAmountState = remember {
-        mutableStateOf(0.0)
-    }
+    val splitRange = Range(1,20)
 
     Column {
-        TopHeader()
+        TopHeader(totalPerPersonState.value)
 
         Surface(
             modifier = Modifier
@@ -167,6 +178,9 @@ fun BillForm(modifier:
                                     splitByState.value =
                                     if (splitByState.value > 1 ) splitByState.value - 1
                                     else 1
+
+                                    totalPerPersonState.value = calculateTotalPerPerson(
+                                        totalBillState.value.toDouble(),splitByState.value, tipPercentage)
                                 })
 
                             Text(
@@ -180,6 +194,9 @@ fun BillForm(modifier:
                                 onClick = {
                                         if (splitByState.value < splitRange.upper){
                                             splitByState.value += 1
+
+                                            totalPerPersonState.value = calculateTotalPerPerson(
+                                                totalBillState.value.toDouble(),splitByState.value, tipPercentage)
                                         }
 
                                 })
@@ -212,10 +229,16 @@ fun BillForm(modifier:
                             onValueChange = { newVal ->
                                 sliderPositionState.value = newVal
                                         tipAmountState.value =
-                                            calculateTotalTip(totalBillState.value.toDouble(), tipPercentage)},
+                                            calculateTotalTip(totalBillState.value.toDouble(), tipPercentage)
+
+                                totalPerPersonState.value = calculateTotalPerPerson(
+                                    totalBillState.value.toDouble(),splitByState.value, tipPercentage)
+
+
+
+                                            },
                             modifier = Modifier
-                                .padding(start = 16.dp, end = 16.dp),
-                            steps = 5)
+                                .padding(start = 16.dp, end = 16.dp))
                     }
                 }else{
                     Box() {
